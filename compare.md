@@ -1,4 +1,4 @@
-I'll generate a simple CRUD API for **ASP.NET Core Web API**, **FastAPI (Python)**, and **Gin (Go)**, so you can compare their syntax and structure. Each API will handle a **"Product"** entity with a basic filter example (`GET /products?name=xyz`).  
+I'll generate a simple CRUD API for **ASP.NET Core Web API**, **FastAPI (Python)**, **Gin (Go)**, and Axum (Rust) so you can compare their syntax and structure. Each API will handle a **"Product"** entity with a basic filter example (`GET /products?name=xyz`).  
 
 ---
 
@@ -280,11 +280,187 @@ func main() {
 
 ---
 
-## **🔍 Comparison Summary**
-| Framework | Language | Performance | Syntax Complexity |
-|-----------|----------|-------------|-------------------|
+### **4️⃣ Axum (Rust)**
+For Rust, **Axum** (from the Tokio project) is a great choice for building web APIs. It’s built on **Hyper** and **Tokio**, making it **fast and async-first**.
+
+---
+
+### **🔹 Install Dependencies**
+Create a new Rust project and add dependencies:
+
+```sh
+cargo new rust_axum_api
+cd rust_axum_api
+```
+
+Edit `Cargo.toml`:
+
+```toml
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+axum = "0.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+```
+
+---
+
+### **🔹 Database & Model (`models.rs`)**
+```rust
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+use uuid::Uuid;
+
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+pub struct Product {
+    pub id: Uuid,
+    pub name: String,
+    pub price: f64,
+}
+```
+
+---
+
+### **🔹 Database Connection (`db.rs`)**
+```rust
+use sqlx::{Pool, Sqlite};
+use crate::models::Product;
+use uuid::Uuid;
+
+pub async fn create_product(db: &Pool<Sqlite>, name: &str, price: f64) -> Result<Product, sqlx::Error> {
+    let id = Uuid::new_v4();
+    sqlx::query("INSERT INTO products (id, name, price) VALUES (?, ?, ?)")
+        .bind(id.to_string())
+        .bind(name)
+        .bind(price)
+        .execute(db)
+        .await?;
+    
+    Ok(Product { id, name: name.to_string(), price })
+}
+
+pub async fn get_products(db: &Pool<Sqlite>, name_filter: Option<String>) -> Result<Vec<Product>, sqlx::Error> {
+    let products = if let Some(name) = name_filter {
+        sqlx::query_as::<_, Product>("SELECT * FROM products WHERE name LIKE ?")
+            .bind(format!("%{}%", name))
+            .fetch_all(db)
+            .await?
+    } else {
+        sqlx::query_as::<_, Product>("SELECT * FROM products")
+            .fetch_all(db)
+            .await?
+    };
+
+    Ok(products)
+}
+```
+
+---
+
+### **🔹 API Handlers (`handlers.rs`)**
+```rust
+use axum::{extract::{Path, Query, State}, Json};
+use sqlx::SqlitePool;
+use std::sync::Arc;
+use crate::{db, models::Product};
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+pub struct ProductQuery {
+    name: Option<String>,
+}
+
+pub async fn list_products(
+    State(db): State<Arc<SqlitePool>>,
+    Query(query): Query<ProductQuery>,
+) -> Json<Vec<Product>> {
+    let products = db::get_products(&db, query.name).await.unwrap();
+    Json(products)
+}
+
+pub async fn create_product(
+    State(db): State<Arc<SqlitePool>>,
+    Json(product): Json<Product>,
+) -> Json<Product> {
+    let new_product = db::create_product(&db, &product.name, product.price).await.unwrap();
+    Json(new_product)
+}
+```
+
+---
+
+### **🔹 Main Server (`main.rs`)**
+```rust
+mod db;
+mod models;
+mod handlers;
+
+use axum::{routing::get, routing::post, Router};
+use sqlx::SqlitePool;
+use std::sync::Arc;
+use tokio::net::TcpListener;
+
+#[tokio::main]
+async fn main() {
+    let db = SqlitePool::connect("sqlite://products.db").await.unwrap();
+    sqlx::migrate!().run(&db).await.unwrap();
+    let db = Arc::new(db);
+
+    let app = Router::new()
+        .route("/products", get(handlers::list_products))
+        .route("/products", post(handlers::create_product))
+        .with_state(db.clone());
+
+    let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+```
+
+---
+
+### **🔹 Running the Rust API**
+```sh
+cargo run
+```
+
+Now, you can make requests:
+
+- **List Products**:  
+  `GET /products`
+- **Create Product**:  
+  `POST /products` with JSON `{ "name": "Laptop", "price": 1200.00 }`
+- **Filter by Name**:  
+  `GET /products?name=laptop`
+
+---
+
+### **🔍 Comparison Summary**
+| Framework  | Language | Performance | Syntax Complexity |
+|------------|----------|-------------|-------------------|
 | ASP.NET Core | C# | High | Medium |
 | FastAPI | Python | Fast | Simple |
 | Gin | Go | Very Fast | Minimal |
+| Axum | Rust | **Blazing Fast** | Medium-High |
+
+Rust with Axum provides a **super-fast**, **memory-safe**, and **async-first** API but has a **steeper learning curve** than Python or Go.  
 
 Let me know if you need further improvements! 🚀
+
+### **🔍 Updated Comparison Summary with Scalability (100k+ req/s)**  
+
+| Framework    | Language | Performance | Syntax Complexity | Scalability (100k+ req/s) |
+|-------------|----------|-------------|-------------------|--------------------------|
+| **ASP.NET Core** | C# | High | Medium | ✅ Possible with Kestrel + Load Balancing |
+| **FastAPI** | Python | Fast | Simple | ❌ Limited (GIL & Uvicorn) |
+| **Gin** | Go | Very Fast | Minimal | ✅ Yes (High Concurrency & Goroutines) |
+| **Axum** | Rust | 🚀 Blazing Fast | Medium-High | ✅ Yes (Async + Tokio + Hyper) |
+
+### **🔹 Explanation**  
+- **ASP.NET Core**: Can handle **100k+ req/s** with **Kestrel + Nginx/Load Balancers** but requires tuning.  
+- **FastAPI**: Uvicorn struggles beyond **50k req/s** due to Python’s **Global Interpreter Lock (GIL)**.  
+- **Gin (Go)**: **Built for high concurrency**, handles 100k+ req/s easily.  
+- **Axum (Rust)**: **Tokio + Hyper** provides **high scalability & low latency**—ideal for ultra-high-performance APIs.  
+
+If you're targeting **100k+ requests per second**, **Rust (Axum) or Go (Gin) are the best choices**. 🚀
