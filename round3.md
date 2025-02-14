@@ -3,7 +3,7 @@ Here’s an updated comparison table including **PostgreSQL (ADO.NET) results** 
 ---
 
 ### **Count Comparison**
-| **PeriodPeriod**         | **MongoDB Count** | **MongoDB Time (s)** | **PostgreSQL Count** | **PostgreSQL Time (s)** | **PostgreSQL (ADO.NET) Count** | **PostgreSQL (ADO.NET) Time (s)** |
+| **Period         _**         | **MongoDB Count** | **MongoDB Time (s)** | **PostgreSQL Count** | **PostgreSQL Time (s)** | **PostgreSQL (ADO.NET) Count** | **PostgreSQL (ADO.NET) Time (s)** |
 |--------------------|-----------------|----------------|-----------------|----------------|----------------------|----------------------|
 | **Total**         | 5,600,000        | 1.88           | 5,600,000       | 18.12          | 5,600,000            | **0.63**             |
 | **Last 1 day**    | 4,866            | 2.52           | 4,814           | 7.39           | 4,499                | **5.74**             |
