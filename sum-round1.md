@@ -1,6 +1,6 @@
 Here's your **comparable table** with execution times converted to **seconds (0.00 format)**:
 
-| **Period**         | **MongoDB Int Sum** | **PostgreSQL Int Sum** | **MongoDB Long Sum** | **PostgreSQL Long Sum** | **MongoDB Double Sum** | **PostgreSQL Double Sum** | **MongoDB Time (s)** | **PostgreSQL Time (s)** |
+|        **Period**         | **MongoDB Int Sum** | **PostgreSQL Int Sum** | **MongoDB Long Sum** | **PostgreSQL Long Sum** | **MongoDB Double Sum** | **PostgreSQL Double Sum** | **MongoDB Time (s)** | **PostgreSQL Time (s)** |
 |--------------------|-------------------|---------------------|-------------------|---------------------|-------------------|---------------------|-----------------|-------------------|
 | **Total**         | 137,140,596        | 137,203,165        | 2,799,542,601     | 2,796,831,965      | 2,798,895.99      | 2,798,417.50       | 3.46            | 18.12            |
 | **Last 1 day**    | 115,929            | 116,105            | 2,394,792         | 2,332,633         | 2,371.09         | 2,401.74          | 2.99            | 7.39             |
