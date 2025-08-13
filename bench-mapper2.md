@@ -1,30 +1,37 @@
-Mana sizga birinchi jadval va umumiy xulosa birlashtirilgan holda:
-
-| Method Pair             | Avg Mean (Old) | Avg Mean (New) | Change (us) | Change (%) | Avg Allocated (Old) | Avg Allocated (New) | Xulosa                                                                      |
-| ----------------------- | -------------: | -------------: | ----------: | ---------: | ------------------: | ------------------: | --------------------------------------------------------------------------- |
-| **GetAll vs GetAllOld** |       13,943.6 |       13,927.1 |   **-16.5** | **-0.12%** |            90.17 KB |            89.71 KB | Tezlik va xotira deyarli bir xil, yangi kod ozgina tezroq va yengilroq.     |
-| **Get vs GetOld**       |          784.6 |          798.5 |   **+13.9** | **+1.77%** |            65.09 KB |            68.20 KB | Yangi versiya o‘rtacha \~14 µs sekinroq va \~3 KB ko‘proq xotira ishlatadi. |
-
-**Umumiy xulosa:**
-
-* **GetAll** — Yangi va eski versiyalar orasida sezilarli farq yo‘q, ba’zan yangi kod biroz tezroq va kamroq xotira ishlatadi.
-* **Get** — Yangi versiya biroz sekinroq (\~2%) va ko‘proq xotira talab qiladi.
-* **Sort by Name** — Har ikkala versiyada ham eng katta ishlash xarajati shu sort turi bo‘lib qolmoqda (Id yoki CreatedAt dan ancha sekin).
-
-Agar xohlasangiz, men sizga **har bir SortLabel bo‘yicha grafik** chiqarib, qaysi joyda yutib, qaysi joyda yutqazayotganini aniq ko‘rsatishim mumkin.
-
+Got it — here’s your data rewritten in the format you want:
 
 ---
 
-Mana sizga birinchi jadval va umumiy xulosa birlashtirilgan holda:
+**Benchmark results:**
 
-| Method Pair             | Avg Mean (Old) | Avg Mean (New) | Change (us) | Change (%) | Avg Allocated (Old) | Avg Allocated (New) | Xulosa                                                                      |
-| ----------------------- | -------------: | -------------: | ----------: | ---------: | ------------------: | ------------------: | --------------------------------------------------------------------------- |
-| **GetAll vs GetAllOld** |       13,943.6 |       13,927.1 |   **-16.5** | **-0.12%** |            90.17 KB |            89.71 KB | Tezlik va xotira deyarli bir xil, yangi kod ozgina tezroq va yengilroq.     |
-| **Get vs GetOld**       |          784.6 |          798.5 |   **+13.9** | **+1.77%** |            65.09 KB |            68.20 KB | Yangi versiya o‘rtacha \~14 µs sekinroq va \~3 KB ko‘proq xotira ishlatadi. |
+| Method | Old Avg (us) | New Avg (us) | % Change | Old Min (us) | New Min (us) | Old Max (us) | New Max (us) |
+| ------ | ------------ | ------------ | -------- | ------------ | ------------ | ------------ | ------------ |
+| GetAll | 13,943.6     | 13,927.1     | -0.12%   | 6,074.1      | 6,117.2      | 23,733.5     | 23,576.9     |
+| Get    | 784.6        | 798.5        | +1.77%   | 723.3        | 730.1        | 885.4        | 911.6        |
 
-**Umumiy xulosa:**
+This makes it clear that:
 
-* **GetAll** — Yangi va eski versiyalar orasida sezilarli farq yo‘q, ba’zan yangi kod biroz tezroq va kamroq xotira ishlatadi.
-* **Get** — Yangi versiya biroz sekinroq (\~2%) va ko‘proq xotira talab qiladi.
-* **Sort by Name** — Har ikkala versiyada ham eng katta ishlash xarajati shu sort turi bo‘lib qolmoqda (Id yoki CreatedAt dan ancha sekin).
+* **GetAll** performance is basically unchanged — tiny average improvement, minimal change in range.
+* **Get** slowed slightly and uses more memory.
+
+---
+
+**High-level Old vs New summary:**
+
+| Aspect                   | **GetAll**                                                                                                  | **Get**                                                                       |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Average speed change** | -0.12% faster on average                                                                                    | +1.77% slower                                                                 |
+| **Memory allocations**   | \~0.5 KB lower on average                                                                                   | \~3 KB higher on average                                                      |
+| **Consistency**          | Performance differences are tiny and vary by sort type                                                      | New version consistently allocates more memory                                |
+| **Sort impact**          | `Name` sort dominates runtime (\~18–24 ms) in both versions, far slower than `Id` or `CreatedAt` (\~6–7 ms) | Same pattern, sort choice has minimal effect on speed since queries are short |
+| **Overall verdict**      | New **GetAll** is performance-neutral vs Old                                                                | New **Get** is slightly slower and heavier in allocations                     |
+
+**In short:**
+
+* **GetAll**: New version ≈ Old version in speed and memory.
+* **Get**: New version is \~14 µs slower and uses \~3 KB more memory.
+* **Sorting by Name** is the biggest cost driver in both versions.
+
+---
+
+Do you want me to also add **memory allocation columns** to the benchmark results table so it’s fully side-by-side? That would make the differences even easier to see.
